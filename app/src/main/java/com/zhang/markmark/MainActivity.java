@@ -13,6 +13,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amap.api.location.AMapLocalWeatherForecast;
+import com.amap.api.location.AMapLocalWeatherListener;
+import com.amap.api.location.AMapLocalWeatherLive;
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.location.LocationManagerProxy;
@@ -32,7 +35,11 @@ import java.util.Date;
 
 
 public class MainActivity extends ActionBarActivity
-        implements LocationSource, AMapLocationListener, AMap.OnMapScreenShotListener {
+        implements LocationSource,
+        AMapLocationListener,
+        AMap.OnMapScreenShotListener,
+        View.OnClickListener,
+        AMapLocalWeatherListener{
 
     private MapView mapView;
     private AMap aMap;
@@ -62,32 +69,8 @@ public class MainActivity extends ActionBarActivity
         txtStart = (TextView) findViewById(R.id.txtStart);
         txtEnd = (TextView) findViewById(R.id.txtEnd);
 
-        btnStart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isStart = true;
-                v.setEnabled(false);
-                if (!location.equals(null)) {
-                    txtStart.setText(new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss").format(new Date())
-                            + "\n" + location.getAddress());
-                    isStart = false;
-                }
-            }
-        });
-
-        btnEnd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isEnd = true;
-                v.setEnabled(false);
-                if (!location.equals(null)) {
-                    txtEnd.setText(new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss").format(new Date())
-                            + "\n" + location.getAddress());
-                    isEnd = false;
-                }
-
-            }
-        });
+        btnStart.setOnClickListener(this);
+        btnEnd.setOnClickListener(this);
 
     }
 
@@ -105,7 +88,7 @@ public class MainActivity extends ActionBarActivity
         aMap.setLocationSource(this);
         aMap.getUiSettings().setMyLocationButtonEnabled(true);
         aMap.setMyLocationEnabled(true);
-        aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
+        aMap.setMyLocationType(AMap.LOCATION_TYPE_MAP_FOLLOW);
 
     }
 
@@ -224,6 +207,7 @@ public class MainActivity extends ActionBarActivity
                     10,
                     this
             );
+            mLocationManagerProxy.requestWeatherUpdates(LocationManagerProxy.WEATHER_TYPE_LIVE,this);
         }
     }
 
@@ -261,6 +245,43 @@ public class MainActivity extends ActionBarActivity
         }catch (FileNotFoundException e){
             e.printStackTrace();
         }
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btn_start:
+
+                break;
+            case R.id.btn_end:
+
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onWeatherLiveSearched(AMapLocalWeatherLive aMapLocalWeatherLive) {
+        if (aMapLocalWeatherLive!=null&&aMapLocalWeatherLive.getAMapException().getErrorCode()==0){
+            String city = aMapLocalWeatherLive.getCity();//获取城市
+            String weather = aMapLocalWeatherLive.getWeather();//获取天气情况
+            String windDir = aMapLocalWeatherLive.getWindDir();//风向
+            String windPower = aMapLocalWeatherLive.getWindPower();//风力
+            String humidity = aMapLocalWeatherLive.getHumidity();//湿度
+            String reportTime = aMapLocalWeatherLive.getReportTime();//时间
+
+            Toast.makeText(this,"天气"+weather,Toast.LENGTH_LONG).show();
+
+        }else{
+            Toast.makeText(this,"获取天气预报失败:"+aMapLocalWeatherLive.getAMapException().getErrorMessage(),
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onWeatherForecaseSearched(AMapLocalWeatherForecast aMapLocalWeatherForecast) {
 
     }
 }
